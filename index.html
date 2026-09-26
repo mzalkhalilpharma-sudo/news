@@ -3,87 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جريدة الأخبار الإلكترونية</title>
-    
-    <!-- استخدام Tailwind CSS للتنسيق -->
+    <title>الجريدة الإلكترونية</title>
+    <!-- استدعاء خطوط عربية كلاسيكية تناسب شكل الجريدة -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <!-- استدعاء Tailwind CSS للتصميم -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- خطوط جوجل (خط القاهرة للواجهة، وخط أميري للنصوص الكلاسيكية) -->
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'serif': ['Amiri', 'serif'],
+                        'sans': ['Cairo', 'sans-serif'],
+                    },
+                    colors: {
+                        'paper': '#f4f1ea', // لون ورق الجرائد
+                        'ink': '#1a1a1a',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        /* التنسيقات العامة الأساسية */
         body {
-            font-family: 'Cairo', sans-serif;
-            background-color: #f4f1ea; /* لون ورق الجرائد القديم */
+            background-color: #f4f1ea;
             color: #1a1a1a;
         }
         
         .newspaper-title {
             font-family: 'Amiri', serif;
-            font-weight: 700;
+            letter-spacing: -1px;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
         }
-        
-        .newspaper-text {
-            font-family: 'Amiri', serif;
-            font-size: 1.15rem;
-            line-height: 1.8;
+
+        .article-content {
+            column-count: 1;
+            column-gap: 2rem;
             text-align: justify;
+            line-height: 1.8;
         }
 
-        .newspaper-border {
-            border-bottom: 4px double #333;
-            border-top: 4px double #333;
+        @media (min-width: 768px) {
+            .article-content.multi-col {
+                column-count: 2;
+            }
         }
 
-        /* تنسيقات الطباعة بمقاس A5 */
+        .tab-active {
+            border-bottom: 4px solid #1a1a1a;
+            font-weight: bold;
+            color: #1a1a1a;
+        }
+
+        /* إعدادات الطباعة بحجم A5 */
         @media print {
             @page {
                 size: A5;
-                margin: 15mm;
+                margin: 1.5cm;
             }
             body {
-                background-color: white !important;
+                background-color: white;
             }
-            /* إخفاء كل شيء باستثناء حاوية الطباعة */
-            body.print-mode > *:not(#print-container) {
+            body * {
+                visibility: hidden;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            .no-print {
                 display: none !important;
             }
-            #print-container {
-                display: block !important;
+            .article-content {
+                column-count: 1 !important; /* عمود واحد في الطباعة لسهولة القراءة */
+                font-size: 12pt;
             }
-            .print-article-image {
+            #print-area img {
                 max-height: 250px;
                 object-fit: cover;
                 width: 100%;
-                margin-bottom: 15px;
-                filter: grayscale(100%); /* طباعة أبيض وأسود لتبدو كجريدة */
-            }
-            .print-article-title {
-                font-size: 24pt;
-                line-height: 1.2;
-                margin-bottom: 10px;
-            }
-            .print-article-text {
-                font-size: 12pt;
-                line-height: 1.6;
+                margin-bottom: 1rem;
             }
         }
 
-        /* إخفاء حاوية الطباعة في الوضع العادي */
-        #print-container {
-            display: none;
-        }
-        
-        /* Loading Spinner */
+        /* تأثيرات التحميل */
         .loader {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
+            border: 4px solid #d1d5db;
+            border-top: 4px solid #1a1a1a;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
-            margin: auto;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -91,270 +110,285 @@
         }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="font-serif min-h-screen flex flex-col">
 
-    <!-- الترويسة الرئيسية -->
-    <header class="container mx-auto px-4 py-8 text-center no-print">
-        <h1 class="newspaper-title text-6xl md:text-7xl mb-4 text-black">الجريدة الإلكترونية</h1>
-        <div class="newspaper-border py-2 flex justify-between items-center text-sm font-semibold">
-            <span id="current-date"></span>
-            <span>الإصدار الرقمي</span>
-            <span>رئيس التحرير: النظام التلقائي</span>
+    <!-- الترويسة (Header) -->
+    <header class="max-w-7xl mx-auto w-full p-4 mt-4 border-b-8 border-double border-ink">
+        <div class="text-center">
+            <h1 class="newspaper-title text-6xl md:text-8xl font-bold mb-2">أخبار اليوم</h1>
+            <p class="font-sans text-sm md:text-base text-gray-600 uppercase tracking-widest border-t border-b border-gray-400 py-1 inline-block px-8" id="current-date">
+                <!-- سيتم وضع التاريخ هنا -->
+            </p>
         </div>
     </header>
 
-    <!-- منطقة التحميل والخطأ -->
-    <div id="status-message" class="container mx-auto px-4 py-10 text-center no-print">
-        <div class="loader mb-4" id="loader"></div>
-        <p class="text-xl" id="loading-text">جاري جلب الأخبار من Google Sheets...</p>
-    </div>
-
-    <!-- حاوية التبويبات (الأبواب) -->
-    <nav class="container mx-auto px-4 mb-8 no-print hidden" id="tabs-container">
-        <ul class="flex flex-wrap border-b border-gray-400 justify-center gap-2" id="tabs-list">
-            <!-- سيتم إضافة التبويبات هنا برمجياً -->
+    <!-- شريط الأبواب (Tabs) -->
+    <nav class="max-w-7xl mx-auto w-full px-4 mt-6">
+        <ul id="tabs-container" class="flex flex-wrap border-b border-gray-300 font-sans text-lg text-gray-500 overflow-x-auto whitespace-nowrap">
+            <!-- سيتم توليد الأبواب ديناميكياً -->
         </ul>
     </nav>
 
-    <!-- حاوية الأخبار -->
-    <main class="container mx-auto px-4 pb-12 no-print hidden" id="news-container">
-        <!-- سيتم إضافة الأخبار هنا برمجياً -->
+    <!-- المحتوى الرئيسي (News Grid) -->
+    <main class="max-w-7xl mx-auto w-full p-4 flex-grow">
+        <!-- مؤشر التحميل -->
+        <div id="loading" class="flex flex-col items-center justify-center py-20">
+            <div class="loader mb-4"></div>
+            <p class="font-sans text-lg">جاري جلب الأخبار من المصدر...</p>
+        </div>
+
+        <!-- رسالة الخطأ -->
+        <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-center font-sans">
+            <strong class="font-bold">عذراً!</strong>
+            <span class="block sm:inline">تعذر جلب البيانات. يرجى التأكد من أن رابط جوجل شيت متاح للمشاهدة العامة (Anyone with the link can view).</span>
+        </div>
+
+        <!-- شبكة الأخبار -->
+        <div id="news-grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mt-6">
+            <!-- سيتم حقن كروت الأخبار هنا -->
+        </div>
     </main>
 
-    <!-- حاوية الطباعة A5 (تظهر فقط عند الطباعة) -->
-    <div id="print-container">
-        <div class="text-center mb-6" style="border-bottom: 2px solid black; padding-bottom: 10px;">
-            <h2 class="newspaper-title" style="font-size: 18pt;">الجريدة الإلكترونية</h2>
-        </div>
-        <div id="print-content">
-            <!-- سيتم حقن تفاصيل الخبر المراد طباعته هنا -->
+    <!-- نافذة عرض تفاصيل الخبر (Modal) قابلة للطباعة -->
+    <div id="article-modal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center p-4">
+        <div class="bg-paper w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded shadow-2xl relative flex flex-col" id="print-area">
+            
+            <!-- أزرار التحكم (تختفي في الطباعة) -->
+            <div class="no-print sticky top-0 bg-paper border-b border-gray-300 p-4 flex justify-between items-center z-10">
+                <button onclick="printArticle()" class="flex items-center gap-2 bg-ink text-white font-sans px-4 py-2 rounded hover:bg-gray-800 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    طباعة (A5)
+                </button>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-red-600 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- محتوى الخبر للطباعة والقراءة -->
+            <div class="p-8">
+                <div class="text-center mb-6">
+                    <span id="modal-category" class="font-sans text-sm text-gray-500 border border-gray-300 px-3 py-1 rounded-full inline-block mb-4"></span>
+                    <h2 id="modal-title" class="text-3xl md:text-5xl font-bold leading-tight mb-4"></h2>
+                    <p id="modal-date" class="font-sans text-gray-500 text-sm"></p>
+                </div>
+                
+                <img id="modal-image" src="" alt="صورة الخبر" class="w-full h-auto max-h-[500px] object-cover mb-8 rounded shadow-sm hidden">
+                
+                <div id="modal-content" class="article-content multi-col text-lg">
+                    <!-- محتوى التفاصيل -->
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- التذييل -->
+    <footer class="bg-ink text-paper py-6 text-center font-sans mt-12 border-t-8 border-double border-gray-600 no-print">
+        <p>© 2026 الجريدة الإلكترونية - جميع الحقوق محفوظة.</p>
+    </footer>
+
     <script>
-        // رابط الـ ID الخاص بالشيت الذي أرفقته
+        // --- إعدادات جوجل شيت ---
         const SHEET_ID = '14wyHZfI6n1odGs88G8nCePwNHlddFJyNzRIFvqeeOjA';
-        // استخدام Google Visualization API لجلب البيانات كـ JSON
-        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+        const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
         let allNews = [];
         let categories = new Set();
+        let currentTab = 'الرئيسية';
 
-        // دالة لجلب البيانات
-        async function fetchNewsData() {
+        // وضع تاريخ اليوم في الترويسة
+        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').textContent = new Date().toLocaleDateString('ar-EG', dateOptions);
+
+        // جلب البيانات من الشيت
+        async function fetchNews() {
             try {
-                const response = await fetch(SHEET_URL);
-                if (!response.ok) throw new Error('فشل في الاتصال بالشيت');
+                const response = await fetch(URL);
+                const text = await response.text();
                 
-                let text = await response.text();
+                // تنظيف استجابة جوجل للحصول على كائن JSON نقي
+                const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+                const data = JSON.parse(jsonString);
                 
-                // إزالة الأجزاء غير الضرورية من الاستجابة لتحويلها لـ JSON صحيح
-                const jsonData = JSON.parse(text.substring(47, text.length - 2));
-                
-                const rows = jsonData.table.rows;
-                
-                if (rows.length === 0) {
-                    throw new Error('لا توجد بيانات في الشيت');
-                }
-
-                // نتخطى الصف الأول إذا كان يحتوي على العناوين، ولكن سنفترض أن كل الصفوف بيانات للحيطة
-                // يمكن تعديلها بـ rows.slice(1) إذا كان الصف الأول دائمًا للعناوين
-                
-                // نفترض الترتيب: 0: الباب, 1: العنوان, 2: التفاصيل, 3: الصورة, 4: التاريخ
-                rows.forEach((row, index) => {
-                    // التحقق من أن الصف ليس فارغاً تماماً
-                    if (!row.c[0] && !row.c[1]) return;
-                    
-                    // إذا كان الصف الأول يحتوي على كلمات مثل "العنوان" نتخطاه
-                    if (index === 0 && row.c[1] && row.c[1].v.includes('عنوان')) return;
-
-                    const category = row.c[0] ? row.c[0].v : 'أخبار عامة';
-                    const title = row.c[1] ? row.c[1].v : 'بدون عنوان';
-                    const content = row.c[2] ? row.c[2].v : '';
-                    const image = row.c[3] ? row.c[3].v : null;
-                    const date = row.c[4] ? row.c[4].v : '';
-
-                    allNews.push({ id: index, category, title, content, image, date });
-                    categories.add(category);
-                });
-
-                renderApp();
-
+                parseData(data.table);
             } catch (error) {
-                console.error(error);
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('loading-text').innerHTML = `
-                    <span class="text-red-600 font-bold">حدث خطأ أثناء جلب البيانات.</span><br>
-                    يرجى التأكد من أن ملف Google Sheets متاح للمشاركة كـ "أي شخص لديه الرابط" (Anyone with the link can view).
-                `;
+                console.error("خطأ في جلب البيانات:", error);
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('error-message').classList.remove('hidden');
             }
         }
 
-        // دالة بناء واجهة المستخدم بعد جلب البيانات
-        function renderApp() {
-            document.getElementById('status-message').classList.add('hidden');
-            document.getElementById('tabs-container').classList.remove('hidden');
-            document.getElementById('news-container').classList.remove('hidden');
+        // تحليل البيانات والتعرف التلقائي على الأعمدة
+        function parseData(table) {
+            const cols = table.cols.map(c => c ? c.label.toLowerCase().trim() : '');
+            
+            // محاولة التعرف على ترتيب الأعمدة بناءً على العناوين الشائعة
+            let colMap = {
+                title: cols.findIndex(c => c.includes('عنوان') || c.includes('خبر') || c.includes('title')),
+                category: cols.findIndex(c => c.includes('قسم') || c.includes('باب') || c.includes('category')),
+                content: cols.findIndex(c => c.includes('تفاصيل') || c.includes('محتوى') || c.includes('content')),
+                image: cols.findIndex(c => c.includes('صورة') || c.includes('رابط') || c.includes('image')),
+                date: cols.findIndex(c => c.includes('تاريخ') || c.includes('date'))
+            };
+
+            // قيم افتراضية في حال لم يتم التعرف على العناوين (افتراض الترتيب: 0=العنوان، 1=القسم، 2=التفاصيل، 3=الصورة)
+            if(colMap.title === -1) colMap.title = 0;
+            if(colMap.category === -1) colMap.category = 1;
+            if(colMap.content === -1) colMap.content = 2;
+            if(colMap.image === -1) colMap.image = 3;
+
+            allNews = table.rows.map(row => {
+                const getVal = (index) => (row.c[index] && row.c[index].v) ? row.c[index].v.toString().trim() : '';
+                
+                let category = getVal(colMap.category) || 'أخرى';
+                categories.add(category);
+
+                return {
+                    title: getVal(colMap.title) || 'بدون عنوان',
+                    category: category,
+                    content: getVal(colMap.content),
+                    image: getVal(colMap.image),
+                    date: colMap.date !== -1 ? getVal(colMap.date) : ''
+                };
+            }).filter(news => news.title !== 'بدون عنوان'); // استبعاد الصفوف الفارغة
+
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('news-grid').classList.remove('hidden');
 
             renderTabs();
-            // عرض أول قسم افتراضياً
-            const firstCategory = Array.from(categories)[0];
-            if (firstCategory) {
-                renderNews(firstCategory);
-            }
+            renderNews(currentTab);
         }
 
-        // دالة رسم التبويبات
+        // رسم شريط الأبواب (الأقسام)
         function renderTabs() {
-            const tabsList = document.getElementById('tabs-list');
-            tabsList.innerHTML = '';
-
-            Array.from(categories).forEach((category, index) => {
+            const tabsContainer = document.getElementById('tabs-container');
+            const allCategories = ['الرئيسية', ...Array.from(categories)];
+            
+            tabsContainer.innerHTML = '';
+            
+            allCategories.forEach(cat => {
                 const li = document.createElement('li');
                 li.className = 'mr-1';
                 
                 const a = document.createElement('a');
-                a.className = `bg-white inline-block border-t border-l border-r border-gray-400 rounded-t py-2 px-6 text-gray-800 font-bold hover:bg-gray-200 cursor-pointer text-lg tab-link ${index === 0 ? 'bg-gray-200 border-b-0' : 'border-b'}`;
-                a.innerText = category;
-                a.onclick = (e) => {
-                    // تحديث شكل التبويبات
-                    document.querySelectorAll('.tab-link').forEach(tab => {
-                        tab.classList.remove('bg-gray-200', 'border-b-0');
-                        tab.classList.add('border-b');
-                    });
-                    e.target.classList.remove('border-b');
-                    e.target.classList.add('bg-gray-200', 'border-b-0');
-                    
-                    // عرض الأخبار
-                    renderNews(category);
+                a.className = `bg-transparent inline-block py-2 px-4 hover:text-ink transition cursor-pointer ${cat === currentTab ? 'tab-active' : ''}`;
+                a.textContent = cat;
+                a.onclick = () => {
+                    currentTab = cat;
+                    renderTabs(); // لإعادة تحديث التصميم النشط (Active)
+                    renderNews(cat);
                 };
                 
                 li.appendChild(a);
-                tabsList.appendChild(li);
+                tabsContainer.appendChild(li);
             });
         }
 
-        // دالة رسم الأخبار للقسم المحدد
-        function renderNews(category) {
-            const container = document.getElementById('news-container');
-            container.innerHTML = '';
-            
-            const filteredNews = allNews.filter(news => news.category === category);
-            
-            // استخدام نظام Grid لتوزيع الأخبار كأعمدة الجريدة
-            const grid = document.createElement('div');
-            grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8';
+        // رسم شبكة الأخبار
+        function renderNews(categoryFilter) {
+            const grid = document.getElementById('news-grid');
+            grid.innerHTML = '';
 
-            filteredNews.forEach(news => {
-                const article = document.createElement('article');
-                article.className = 'bg-white p-6 border border-gray-300 shadow-sm flex flex-col justify-between';
+            const filteredNews = categoryFilter === 'الرئيسية' 
+                ? allNews 
+                : allNews.filter(n => n.category === categoryFilter);
+
+            if(filteredNews.length === 0) {
+                grid.innerHTML = '<p class="col-span-full text-center text-gray-500 font-sans py-10">لا توجد أخبار في هذا القسم حالياً.</p>';
+                return;
+            }
+
+            filteredNews.forEach((news, index) => {
+                // الكارت الأول في قسم "الرئيسية" نعطيه حجماً أكبر كـ "مانشيت"
+                const isFeatured = categoryFilter === 'الرئيسية' && index === 0;
                 
+                const card = document.createElement('article');
+                card.className = `bg-white border border-gray-300 p-4 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col ${isFeatured ? 'md:col-span-2 lg:col-span-3 xl:col-span-2 row-span-2' : ''}`;
+                card.onclick = () => openModal(news);
+
+                // تقصير النص للعرض المبدئي
+                const snippet = news.content.length > 150 ? news.content.substring(0, 150) + '...' : news.content;
+
                 let imageHtml = '';
-                if (news.image && news.image.startsWith('http')) {
-                    imageHtml = `<img src="${news.image}" alt="صورة الخبر" class="w-full h-48 object-cover mb-4 border border-gray-200 filter grayscale hover:grayscale-0 transition duration-300">`;
+                if (news.image) {
+                    imageHtml = `<div class="mb-4 overflow-hidden border border-gray-200">
+                                    <img src="${news.image}" alt="صورة" class="w-full h-48 ${isFeatured ? 'md:h-80' : ''} object-cover hover:scale-105 transition duration-500 filter sepia-[.2]">
+                                 </div>`;
                 }
 
-                article.innerHTML = `
-                    <div>
-                        ${imageHtml}
-                        <span class="text-xs text-gray-500 font-bold mb-2 block">${news.date}</span>
-                        <h2 class="newspaper-title text-2xl mb-3 text-black">${news.title}</h2>
-                        <p class="newspaper-text text-gray-700 mb-4 line-clamp-4">
-                            ${news.content.replace(/\n/g, '<br>')}
-                        </p>
-                    </div>
-                    <div class="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
-                        <button onclick="printArticle(${news.id})" class="text-sm bg-gray-800 text-white py-1 px-4 rounded hover:bg-black flex items-center gap-2 transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                            </svg>
-                            طباعة A5
-                        </button>
-                        <button onclick="showFullArticle(${news.id})" class="text-blue-700 font-bold text-sm hover:underline">اقرأ المزيد &larr;</button>
+                card.innerHTML = `
+                    ${imageHtml}
+                    <div class="flex flex-col flex-grow">
+                        <span class="text-xs font-sans text-red-700 uppercase tracking-wider mb-2">${news.category}</span>
+                        <h2 class="font-bold mb-3 text-ink leading-snug ${isFeatured ? 'text-3xl md:text-4xl' : 'text-xl'}">${news.title}</h2>
+                        <p class="text-gray-600 text-sm leading-relaxed font-sans mb-4 flex-grow">${snippet}</p>
+                        <div class="mt-auto border-t border-gray-200 pt-3 flex justify-between items-center text-xs font-sans text-gray-400">
+                            <span>اقرأ التفاصيل</span>
+                            ${news.date ? `<span>${news.date}</span>` : ''}
+                        </div>
                     </div>
                 `;
-                grid.appendChild(article);
+                grid.appendChild(card);
             });
-
-            container.appendChild(grid);
         }
 
-        // دالة لعرض تفاصيل الخبر بالكامل في نفس الصفحة (بشكل مبسط)
-        function showFullArticle(id) {
-            const news = allNews.find(n => n.id === id);
-            if (!news) return;
-
-            const container = document.getElementById('news-container');
+        // فتح نافذة التفاصيل
+        function openModal(news) {
+            document.getElementById('modal-title').textContent = news.title;
+            document.getElementById('modal-category').textContent = news.category;
+            document.getElementById('modal-date').textContent = news.date || '';
             
-            let imageHtml = '';
-            if (news.image && news.image.startsWith('http')) {
-                imageHtml = `<img src="${news.image}" alt="صورة الخبر" class="w-full max-w-2xl mx-auto h-auto object-cover mb-8 border border-gray-300 p-1">`;
+            // تحويل فواصل الأسطر في النص إلى <br>
+            const formattedContent = news.content.replace(/\n/g, '<br><br>');
+            document.getElementById('modal-content').innerHTML = formattedContent;
+
+            const imgEl = document.getElementById('modal-image');
+            if (news.image) {
+                imgEl.src = news.image;
+                imgEl.classList.remove('hidden');
+            } else {
+                imgEl.classList.add('hidden');
+                imgEl.src = '';
             }
 
-            container.innerHTML = `
-                <div class="max-w-4xl mx-auto bg-white p-8 md:p-12 border border-gray-300 shadow-md">
-                    <button onclick="renderNews('${news.category}')" class="mb-6 text-sm bg-gray-200 py-1 px-3 rounded hover:bg-gray-300 flex items-center gap-2">
-                        &rarr; العودة للقسم
-                    </button>
-                    <span class="text-sm font-bold text-red-700 mb-2 block">${news.category} | ${news.date}</span>
-                    <h1 class="newspaper-title text-4xl md:text-5xl mb-8 leading-tight">${news.title}</h1>
-                    ${imageHtml}
-                    <div class="newspaper-text text-xl">
-                        ${news.content.replace(/\n/g, '<br><br>')}
-                    </div>
-                    <div class="mt-10 pt-6 border-t border-gray-300 text-center">
-                         <button onclick="printArticle(${news.id})" class="text-lg bg-gray-800 text-white py-2 px-8 rounded hover:bg-black inline-flex items-center gap-2 transition">
-                            طباعة هذا الخبر (A5)
-                        </button>
-                    </div>
-                </div>
-            `;
+            document.getElementById('article-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // منع تمرير الصفحة الخلفية
         }
 
-        // دالة تهيئة وطباعة الخبر بمقاس A5
-        function printArticle(id) {
-            const news = allNews.find(n => n.id === id);
-            if (!news) return;
+        // إغلاق النافذة
+        function closeModal() {
+            document.getElementById('article-modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
 
-            const printContent = document.getElementById('print-content');
-            
-            let imageHtml = '';
-            if (news.image && news.image.startsWith('http')) {
-                imageHtml = `<img src="${news.image}" class="print-article-image">`;
-            }
-
-            // بناء هيكل الطباعة
-            printContent.innerHTML = `
-                <div style="text-align: right; margin-bottom: 15px;">
-                    <span style="background: black; color: white; padding: 2px 8px; font-weight: bold; font-family: 'Cairo', sans-serif;">${news.category}</span>
-                    <span style="font-size: 10pt; color: #555; margin-right: 10px;">${news.date}</span>
-                </div>
-                <h1 class="newspaper-title print-article-title">${news.title}</h1>
-                ${imageHtml}
-                <div class="newspaper-text print-article-text">
-                    ${news.content.replace(/\n/g, '<br><br>')}
-                </div>
-            `;
-
-            // تفعيل وضع الطباعة
-            document.body.classList.add('print-mode');
-            
-            // استدعاء نافذة الطباعة
+        // دالة الطباعة (تستدعي الطباعة الافتراضية للمتصفح، و CSS يتكفل بالباقي)
+        function printArticle() {
             window.print();
-
-            // إلغاء وضع الطباعة بعد انتهاء العملية
-            setTimeout(() => {
-                document.body.classList.remove('print-mode');
-            }, 500);
         }
 
-        // ضبط التاريخ الحالي في الترويسة
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        document.getElementById('current-date').innerText = new Date().toLocaleDateString('ar-EG', options);
+        // إغلاق النافذة عند النقر خارجها
+        document.getElementById('article-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
 
         // بدء التنفيذ
-        fetchNewsData();
-
+        fetchNews();
     </script>
 </body>
 </html>
+```eof
+
+### مميزات هذا التطبيق وطريقة استخدامه:
+
+1. **لا يحتاج استضافة قواعد بيانات**: التطبيق يقرأ مباشرة من الشيت الخاص بك ويحول البيانات المعقدة إلى شكل جريدة. (الكود مصمم للبحث التلقائي عن الكلمات المفتاحية في أول صف مثل: "العنوان، تفاصيل، صورة، قسم" لربط البيانات تلقائياً، وإن لم يجدها سيفترض ترتيب الأعمدة القياسي من A إلى D).
+2. **تصميم الصحافة الكلاسيكية**: تم استخدام خطوط (Amiri) الكلاسيكية للعناوين وتنسيقات الأعمدة المتعددة (Columns) ليعطي إحساس قراءة جريدة حقيقية.
+3. **أبواب ديناميكية**: يقوم التطبيق تلقائياً بقراءة عمود "القسم" أو "الباب" من الشيت، ويولد بناءً عليه تبويبات بالأعلى لتصفية الأخبار.
+4. **ميزة طباعة A5**: عند فتح أي خبر (بالنقر عليه)، سيظهر لك زر "طباعة (A5)". بمجرد الضغط عليه، ستختفي كل عناصر الموقع الجانبية، وسيتم تنسيق الخبر والصورة ليتناسب حصرياً مع حجم ورقة A5 لطباعة نظيفة وأنيقة.
+
+**خطوة هامة جداً للتشغيل:**
+افتح ملف جوجل شيت الخاص بك، اضغط على زر **"مشاركة" (Share)** في الأعلى، ثم غيّر خيار الوصول العام (General access) إلى **"أي شخص لديه الرابط" (Anyone with the link)** واجعله **"مشاهد" (Viewer)**. بدون هذه الخطوة سيمنع جوجل التطبيق من قراءة الأخبار.
